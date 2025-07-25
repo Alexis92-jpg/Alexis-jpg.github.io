@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Tracker</title>
+    <!-- Inter font from Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Global Styles */
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: #F0F4F8;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to top */
+            padding: 20px 0;
+            box-sizing: border-box;
+        }
+        #root {
+            width: 100%;
+            max-width: 600px; /* Max width for better readability on large screens */
+            background-color: #F0F4F8;
+            padding: 0;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            overflow: hidden; /* Ensures rounded corners are respected */
+        }
+        .container {
+            padding: 20px;
+        }
+        .title {
+            font-size: 32px;
+            font-weight: bold;
+            color: #2C3E50;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .message-box {
+            background-color: #D4EDDA;
+            color: #155724;
+            padding: 10px;
+            border-radius: 8px;
+            margin: 0 20px 20px 20px;
+            text-align: center;
+            border: 1px solid #C3E6CB;
+        }
+
+        /* Input and Button Styles */
+        .input-row {
+            display: flex;
+            flex-wrap: wrap; /* Allow items to wrap on smaller screens */
+            gap: 10px; /* Space between inputs/buttons */
+            padding: 0 20px;
+            margin-bottom: 10px; /* Space between input row and button row */
+            align-items: center;
+            justify-content: space-between; /* Justify content to spread items */
+        }
+        .button-row {
+            display: flex;
+            gap: 10px; /* Space between buttons */
+            padding: 0 20px;
+            margin-bottom: 20px;
+            justify-content: center; /* Align buttons to the center */
+        }
+        .text-input {
+            flex: 1; /* Allows inputs to grow */
+            height: 50px;
+            border: 1px solid #BDC3C7;
+            border-radius: 10px;
+            padding: 0 15px;
+            background-color: #FFFFFF;
+            font-size: 16px;
+            color: #34495E;
+            box-sizing: border-box;
+        }
+        .add-button {
+            background-color: #2ECC71;
+            padding: 12px 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 5px rgba(39, 174, 96, 0.3);
+            color: #FFFFFF;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            flex-shrink: 0; /* Prevent button from shrinking */
+        }
+        .add-button:hover {
+            background-color: #27AE60;
+        }
+
+        /* Autocomplete Styles */
+        .autocomplete-container {
+            position: relative;
+            flex: 1;
+        }
+        .autocomplete-suggestions {
+            position: absolute;
+            top: 100%; /* Position below the input */
+            left: 0;
+            right: 0;
+            background-color: #FFFFFF;
+            border: 1px solid #BDC3C7;
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+            max-height: 150px;
+            overflow-y: auto;
+            z-index: 100; /* Ensure it's above other elements */
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .autocomplete-suggestion-item {
+            padding: 10px 15px;
+            cursor: pointer;
+            font-size: 16px;
+            color: #34495E;
+        }
+        .autocomplete-suggestion-item:hover {
+            background-color: #ECF0F1;
+        }
+
+        /* Task List Styles */
+        .flat-list-container {
+            padding: 0 20px;
+        }
+        .task-item {
+            background-color: #FFFFFF;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 2px 4px rgba(189, 195, 199, 0.2);
+        }
+        .task-info {
+            margin-bottom: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px 15px; /* Row gap, column gap */
+            align-items: baseline;
+        }
+        .task-name {
+            font-size: 20px;
+            font-weight: 600;
+            color: #2C3E50;
+            flex-basis: 100%; /* Take full width */
+            margin-bottom: 5px;
+        }
+        .task-tag, .task-date {
+            font-size: 14px;
+            color: #7F8C8D;
+            background-color: #ECF0F1;
+            padding: 4px 8px;
+            border-radius: 5px;
+            white-space: nowrap; /* Prevent tag from wrapping */
+        }
+        .task-time {
+            font-size: 24px;
+            font-weight: bold;
+            color: #3498DB;
+            flex-basis: 100%; /* Take full width */
+            margin-top: 5px;
+        }
+        .task-actions {
+            display: flex;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+            gap: 5px; /* Space between action buttons */
+        }
+        .button {
+            padding: 8px 15px;
+            border-radius: 8px;
+            min-width: 70px;
+            align-items: center;
+            justify-content: center;
+            background-color: #3498DB;
+            box-shadow: 0 2px 3px rgba(41, 128, 185, 0.2);
+            color: #FFFFFF;
+            font-size: 14px;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .button:hover {
+            background-color: #2980B9;
+        }
+        .pause-button {
+            background-color: #F39C12;
+            box-shadow: 0 2px 3px rgba(230, 126, 34, 0.2);
+        }
+        .pause-button:hover {
+            background-color: #E67E22;
+        }
+        .stop-button {
+            background-color: #E74C3C;
+            box-shadow: 0 2px 3px rgba(192, 57, 43, 0.2);
+        }
+        .stop-button:hover {
+            background-color: #C0392B;
+        }
+        .delete-button {
+            background-color: #95A5A6;
+            box-shadow: 0 2px 3px rgba(127, 140, 141, 0.2);
+        }
+        .delete-button:hover {
+            background-color: #7F8C8D;
+        }
+        .empty-list-text {
+            text-align: center;
+            margin-top: 50px;
+            font-size: 18px;
+            color: #7F8C8D;
+        }
+
+        /* Stats Page Styles */
+        .stats-container {
+            padding: 20px;
+        }
+        .stats-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .stats-back-button {
+            background-color: #3498DB;
+            color: #FFFFFF;
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+        .stats-back-button:hover {
+            background-color: #2980B9;
+        }
+        .stats-section-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2C3E50;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .graph-container {
+            background-color: #FFFFFF;
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(189, 195, 199, 0.2);
+            overflow-x: auto; /* Allow horizontal scrolling for graphs if needed */
+        }
+        .bar-graph-canvas {
+            display: block; /* Remove extra space below canvas */
+            width: 100%;
+            height: 300px; /* Fixed height for the bar graph */
+        }
+        .weekly-calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr); /* 7 columns for days */
+            gap: 5px;
+            margin-top: 20px;
+        }
+        .calendar-day-header {
+            background-color: #34495E;
+            color: #FFFFFF;
+            padding: 8px 0;
+            text-align: center;
+            font-weight: bold;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .calendar-cell {
+            background-color: #ECF0F1;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            font-size: 14px;
+            color: #2C3E50;
+            min-height: 60px; /* Ensure cells have a minimum height */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .calendar-cell.today {
+            border: 2px solid #3498DB;
+            background-color: #D6EEF9;
+        }
+        .calendar-cell-date {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .calendar-cell-time {
+            font-size: 12px;
+            color: #3498DB;
+        }
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 10px;
+            gap: 10px;
+            font-size: 14px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+        }
+        .legend-color-box {
+            width: 15px;
+            height: 15px;
+            border-radius: 3px;
+            margin-right: 5px;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 480px) {
+            .input-row, .button-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .text-input, .autocomplete-container {
+                margin-right: 0;
+                margin-bottom: 10px;
+            }
+            .add-button {
+                width: 100%;
+            }
+            .task-actions {
+                justify-content: center; /* Center buttons on small screens */
+            }
+            .button {
+                flex: 1; /* Make buttons take full width of container */
+            }
+            .calendar-day-header, .calendar-cell {
+                font-size: 12px;
+                padding: 5px;
+                min-height: 50px;
+            }
+            .calendar-cell-date {
+                font-size: 12px;
+            }
+            .calendar-cell-time {
+                font-size: 10px;
+            }
+            .button-row {
+                justify-content: space-around; /* Distribute buttons within the group */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <!-- React and ReactDOM from CDN -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel for JSX transformation in browser (for development/simple cases) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <script type="text/babel">
+        // Helper function to format time from seconds to HH:MM:SS
+        const formatTime = (totalSeconds) => {
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+
+            return [hours, minutes, seconds]
+                .map((unit) => String(unit).padStart(2, '0'))
+                .join(':');
+        };
+
+        // Function to get today's date in YYYY-MM-DD format
+        const getTodayDate = () => {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        };
+
+        // Color palette for tags in graphs
+        const tagColors = {
+            'default': '#3498DB', // Blue for general/no tag
+            'work': '#E67E22', // Orange
+            'study': '#9B59B6', // Purple
+            'personal': '#1ABC9C', // Turquoise
+            'hobby': '#F1C40F', // Yellow
+            'fitness': '#E74C3C', // Red
+            'chores': '#2C3E50', // Dark Blue
+            // Add more colors as needed, or generate dynamically
+            'color1': '#FF5733',
+            'color2': '#33FF57',
+            'color3': '#3357FF',
+            'color4': '#FF33A1',
+            'color5': '#A133FF',
+            'color6': '#33FFF1',
+        };
+
+        // Function to get a color for a tag, cycling through a set if new
+        const getTagColor = (tag, index) => {
+            if (tagColors[tag.toLowerCase()]) {
+                return tagColors[tag.toLowerCase()];
+            }
+            const colors = Object.values(tagColors).filter(color => color.startsWith('#')); // Get only hex colors
+            return colors[index % colors.length];
+        };
+
+
+        // TaskItem Component
+        const TaskItem = ({ task, onDelete, onStart, onPause, onStop, onUpdateTime }) => {
+            const intervalRef = React.useRef(null);
+
+            React.useEffect(() => {
+                if (task.timerRunning) {
+                    if (intervalRef.current) {
+                        clearInterval(intervalRef.current);
+                    }
+                    intervalRef.current = setInterval(() => {
+                        onUpdateTime(task.id, task.timeElapsed + 1);
+                    }, 1000);
+                } else {
+                    if (intervalRef.current) {
+                        clearInterval(intervalRef.current);
+                    }
+                }
+                return () => {
+                    if (intervalRef.current) {
+                        clearInterval(intervalRef.current);
+                    }
+                };
+            }, [task.timerRunning, task.id, task.timeElapsed, onUpdateTime]);
+
+            return (
+                <div className="task-item">
+                    <div className="task-info">
+                        <span className="task-name">{task.name}</span>
+                        {task.tag && <span className="task-tag">Tag: {task.tag}</span>}
+                        {task.date && <span className="task-date">Date: {task.date}</span>}
+                        <span className="task-time">{formatTime(task.timeElapsed)}</span>
+                    </div>
+                    <div className="task-actions">
+                        {!task.timerRunning && !task.timerPaused && (
+                            <button className="button" onClick={() => onStart(task.id)}>
+                                Start
+                            </button>
+                        )}
+                        {task.timerRunning && (
+                            <button className="button pause-button" onClick={() => onPause(task.id)}>
+                                Pause
+                            </button>
+                        )}
+                        {task.timerPaused && (
+                            <button className="button" onClick={() => onStart(task.id)}>
+                                Resume
+                            </button>
+                        )}
+                        {(task.timerRunning || task.timerPaused) && (
+                            <button className="button stop-button" onClick={() => onStop(task.id)}>
+                                Stop
+                            </button>
+                        )}
+                        <button className="button delete-button" onClick={() => onDelete(task.id)}>
+                            Delete
+                        </button>
+                    </div>
+                </div>
+            );
+        };
+
+        // StatsPage Component
+        const StatsPage = ({ tasks, onBack }) => {
+            const canvasRef = React.useRef(null);
+
+            // Calculate daily totals and tag-specific totals
+            const calculateDailyStats = React.useCallback(() => {
+                const dailyStats = {}; // { 'YYYY-MM-DD': { totalTime: X, tags: { 'tag1': Y, 'tag2': Z } } }
+                const allUniqueTags = new Set();
+
+                tasks.forEach(task => {
+                    const date = task.date || 'No Date';
+                    if (!dailyStats[date]) {
+                        dailyStats[date] = { totalTime: 0, tags: {} };
+                    }
+                    dailyStats[date].totalTime += task.timeElapsed;
+
+                    const tag = task.tag || 'No Tag';
+                    if (!dailyStats[date].tags[tag]) {
+                        dailyStats[date].tags[tag] = 0;
+                    }
+                    dailyStats[date].tags[tag] += task.timeElapsed;
+                    allUniqueTags.add(tag);
+                });
+
+                // Sort dates for consistent graph order
+                const sortedDates = Object.keys(dailyStats).sort();
+
+                return { dailyStats, sortedDates, allUniqueTags: Array.from(allUniqueTags).sort() };
+            }, [tasks]);
+
+            // Draw the bar graph
+            const drawBarGraph = React.useCallback((ctx, data, sortedDates, uniqueTags) => {
+                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height); // Clear canvas
+                const canvasWidth = ctx.canvas.width;
+                const canvasHeight = ctx.canvas.height;
+                const padding = 40;
+                const barWidth = 30;
+                const gap = 20;
+
+                const maxTime = Math.max(...Object.values(data).map(d => d.totalTime), 1); // Avoid division by zero
+
+                ctx.font = '12px Inter';
+                ctx.fillStyle = '#2C3E50';
+                ctx.textAlign = 'center';
+
+                let xOffset = padding;
+
+                sortedDates.forEach((date, index) => {
+                    const dailyData = data[date];
+                    const totalHeight = (dailyData.totalTime / maxTime) * (canvasHeight - 2 * padding);
+                    let currentY = canvasHeight - padding;
+
+                    // Draw stacked bars for tags
+                    let tagIndex = 0;
+                    uniqueTags.forEach(tag => {
+                        const tagTime = dailyData.tags[tag] || 0;
+                        if (tagTime > 0) {
+                            const tagHeight = (tagTime / maxTime) * (canvasHeight - 2 * padding);
+                            ctx.fillStyle = getTagColor(tag, tagIndex);
+                            ctx.fillRect(xOffset, currentY - tagHeight, barWidth, tagHeight);
+                            currentY -= tagHeight;
+                            tagIndex++;
+                        }
+                    });
+
+                    // Draw date label
+                    ctx.fillStyle = '#2C3E50';
+                    ctx.fillText(date, xOffset + barWidth / 2, canvasHeight - padding + 15);
+
+                    // Draw time label
+                    ctx.fillText(formatTime(dailyData.totalTime), xOffset + barWidth / 2, canvasHeight - padding - totalHeight - 5);
+
+                    xOffset += barWidth + gap;
+                });
+
+                // Draw Y-axis (optional, for more formal graphs)
+                ctx.beginPath();
+                ctx.strokeStyle = '#BDC3C7';
+                ctx.moveTo(padding, padding);
+                ctx.lineTo(padding, canvasHeight - padding);
+                ctx.stroke();
+
+                // Draw X-axis
+                ctx.beginPath();
+                ctx.moveTo(padding, canvasHeight - padding);
+                ctx.lineTo(xOffset - gap + padding, canvasHeight - padding);
+                ctx.stroke();
+
+            }, []); // No dependencies for drawBarGraph itself, it uses passed props
+
+            React.useEffect(() => {
+                const canvas = canvasRef.current;
+                if (!canvas) return;
+
+                const ctx = canvas.getContext('2d');
+                const { dailyStats, sortedDates, allUniqueTags } = calculateDailyStats();
+
+                // Set canvas dimensions for high-DPI screens
+                const dpr = window.devicePixelRatio || 1;
+                canvas.width = canvas.offsetWidth * dpr;
+                canvas.height = canvas.offsetHeight * dpr;
+                ctx.scale(dpr, dpr);
+
+                drawBarGraph(ctx, dailyStats, sortedDates, allUniqueTags);
+
+                // Redraw on window resize
+                const handleResize = () => {
+                    canvas.width = canvas.offsetWidth * dpr;
+                    canvas.height = canvas.offsetHeight * dpr;
+                    ctx.scale(dpr, dpr);
+                    drawBarGraph(ctx, dailyStats, sortedDates, allUniqueTags);
+                };
+                window.addEventListener('resize', handleResize);
+                return () => window.removeEventListener('resize', handleResize);
+            }, [tasks, calculateDailyStats, drawBarGraph]); // Redraw when tasks change
+
+            const { dailyStats, allUniqueTags } = calculateDailyStats();
+
+            // Prepare data for weekly calendar view
+            const getWeeklyData = () => {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0); // Normalize to start of day
+
+                const weeks = [];
+                for (let i = 0; i < 4; i++) { // Generate 4 weeks
+                    const week = [];
+                    // Go back to the start of the current week (Sunday)
+                    const firstDayOfWeek = new Date(today.getTime());
+                    firstDayOfWeek.setDate(firstDayOfWeek.getDate() - firstDayOfWeek.getDay() - (i * 7)); // Adjust for previous weeks
+
+                    for (let j = 0; j < 7; j++) { // 7 days in a week
+                        const currentDay = new Date(firstDayOfWeek.getTime());
+                        currentDay.setDate(firstDayOfWeek.getDate() + j);
+                        const dateString = currentDay.toISOString().slice(0, 10); // YYYY-MM-DD
+
+                        const totalTime = dailyStats[dateString] ? dailyStats[dateString].totalTime : 0;
+                        week.push({
+                            date: currentDay,
+                            dateString: dateString,
+                            totalTime: totalTime,
+                            isToday: dateString === getTodayDate()
+                        });
+                    }
+                    weeks.unshift(week); // Add to the beginning to show most recent week last
+                }
+                return weeks;
+            };
+
+            const weeklyData = getWeeklyData();
+            const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+            return (
+                <div className="stats-container">
+                    <div className="stats-header">
+                        <h1 className="title">Task Stats</h1>
+                        <button className="stats-back-button" onClick={onBack}>Back to Home</button>
+                    </div>
+
+                    <h2 className="stats-section-title">Daily Time Spent</h2>
+                    <div className="graph-container">
+                        <canvas ref={canvasRef} className="bar-graph-canvas"></canvas>
+                        <div className="legend">
+                            <div className="legend-item">
+                                <div className="legend-color-box" style={{backgroundColor: tagColors.default}}></div>
+                                <span>Overall Daily Total</span>
+                            </div>
+                            {allUniqueTags.map((tag, index) => (
+                                <div key={tag} className="legend-item">
+                                    <div className="legend-color-box" style={{backgroundColor: getTagColor(tag, index)}}></div>
+                                    <span>{tag}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <h2 className="stats-section-title">Weekly Overview (Last 4 Weeks)</h2>
+                    <div className="graph-container">
+                        <div className="weekly-calendar">
+                            {dayNames.map(day => (
+                                <div key={day} className="calendar-day-header">{day}</div>
+                            ))}
+                            {weeklyData.flat().map((day, index) => (
+                                <div key={index} className={`calendar-cell ${day.isToday ? 'today' : ''}`}>
+                                    <span className="calendar-cell-date">{day.date.getDate()}</span>
+                                    <span className="calendar-cell-time">{formatTime(day.totalTime)}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+
+        // Main App component
+        const App = () => {
+            const [tasks, setTasks] = React.useState([]);
+            const [newTaskName, setNewTaskName] = React.useState('');
+            const [newTaskTag, setNewTaskTag] = React.useState('');
+            const [message, setMessage] = React.useState('');
+            const [currentPage, setCurrentPage] = React.useState('home'); // 'home' or 'stats'
+
+            const [allTags, setAllTags] = React.useState([]);
+            const [filteredTags, setFilteredTags] = React.useState([]);
+
+            React.useEffect(() => {
+                loadTasks();
+                loadTags();
+            }, []);
+
+            React.useEffect(() => {
+                saveTasks(tasks);
+                saveTags(allTags);
+            }, [tasks, allTags]);
+
+            const showMessage = (msg, type = 'info') => {
+                setMessage(msg);
+                setTimeout(() => setMessage(''), 3000);
+            };
+
+            const loadTasks = () => {
+                try {
+                    const storedTasks = localStorage.getItem('tasks');
+                    if (storedTasks !== null) {
+                        setTasks(JSON.parse(storedTasks));
+                    }
+                } catch (error) {
+                    console.error('Failed to load tasks:', error);
+                    showMessage('Failed to load tasks.', 'error');
+                }
+            };
+
+            const saveTasks = (tasksToSave) => {
+                try {
+                    localStorage.setItem('tasks', JSON.stringify(tasksToSave));
+                } catch (error) {
+                    console.error('Failed to save tasks:', error);
+                    showMessage('Failed to save tasks.', 'error');
+                }
+            };
+
+            const loadTags = () => {
+                try {
+                    const storedTags = localStorage.getItem('allTags');
+                    if (storedTags !== null) {
+                        setAllTags(JSON.parse(storedTags));
+                    }
+                } catch (error) {
+                    console.error('Failed to load tags:', error);
+                }
+            };
+
+            const saveTags = (tagsToSave) => {
+                try {
+                    localStorage.setItem('allTags', JSON.stringify(tagsToSave));
+                } catch (error) {
+                    console.error('Failed to save tags:', error);
+                }
+            };
+
+            const addTask = () => {
+                if (newTaskName.trim().length === 0) {
+                    showMessage('Task name cannot be empty.', 'error');
+                    return;
+                }
+
+                const newId = Date.now().toString();
+                const todayDate = getTodayDate();
+                const newTask = {
+                    id: newId,
+                    name: newTaskName.trim(),
+                    tag: newTaskTag.trim() || 'No Tag', // Default tag if empty
+                    date: todayDate,
+                    timeElapsed: 0,
+                    timerRunning: false,
+                    timerPaused: false,
+                };
+                setTasks([...tasks, newTask]);
+                setNewTaskName('');
+                setNewTaskTag('');
+                showMessage('Task added successfully!', 'info');
+
+                // Add new tag to allTags if it's not already there
+                if (newTaskTag.trim() && !allTags.includes(newTaskTag.trim())) {
+                    setAllTags([...allTags, newTaskTag.trim()]);
+                }
+            };
+
+            const deleteTask = (id) => {
+                setTasks(tasks.filter((task) => task.id !== id));
+                showMessage('Task deleted.', 'info');
+            };
+
+            const startTimer = (id) => {
+                setTasks(
+                    tasks.map((task) =>
+                        task.id === id
+                            ? { ...task, timerRunning: true, timerPaused: false }
+                            : task
+                    )
+                );
+            };
+
+            const pauseTimer = (id) => {
+                setTasks(
+                    tasks.map((task) =>
+                        task.id === id
+                            ? { ...task, timerRunning: false, timerPaused: true }
+                            : task
+                    )
+                );
+            };
+
+            const stopTimer = (id) => {
+                setTasks(
+                    tasks.map((task) =>
+                        task.id === id
+                            ? { ...task, timerRunning: false, timerPaused: false }
+                            : task
+                    )
+                );
+            };
+
+            const updateTaskTime = React.useCallback((id, newTimeElapsed) => {
+                setTasks(
+                    (prevTasks) => prevTasks.map((task) =>
+                        task.id === id
+                            ? { ...task, timeElapsed: newTimeElapsed }
+                            : task
+                    )
+                );
+            }, []); // useCallback to prevent re-creation on every render
+
+            // Autocomplete logic for tags
+            const handleTagInputChange = (e) => {
+                const value = e.target.value;
+                setNewTaskTag(value);
+                if (value.length > 0) {
+                    const filtered = allTags.filter(tag =>
+                        tag.toLowerCase().includes(value.toLowerCase())
+                    );
+                    setFilteredTags(filtered);
+                } else {
+                    setFilteredTags([]);
+                }
+            };
+
+            const selectTagSuggestion = (tag) => {
+                setNewTaskTag(tag);
+                setFilteredTags([]); // Clear suggestions after selection
+            };
+
+
+            return (
+                <div className="container">
+                    {currentPage === 'home' ? (
+                        <div className="home-page-content">
+                            <h1 className="title">Task Tracker</h1>
+
+                            {message && (
+                                <div className="message-box">
+                                    <p>{message}</p>
+                                </div>
+                            )}
+
+                            {/* Input fields row */}
+                            <div className="input-row">
+                                <input
+                                    type="text"
+                                    className="text-input"
+                                    placeholder="Name"
+                                    value={newTaskName}
+                                    onChange={(e) => setNewTaskName(e.target.value)}
+                                />
+                                <div className="autocomplete-container">
+                                    <input
+                                        type="text"
+                                        className="text-input"
+                                        placeholder="Tag"
+                                        value={newTaskTag}
+                                        onChange={handleTagInputChange}
+                                        onBlur={() => setTimeout(() => setFilteredTags([]), 100)} /* Hide suggestions on blur */
+                                    />
+                                    {filteredTags.length > 0 && (
+                                        <div className="autocomplete-suggestions">
+                                            {filteredTags.map((tag, index) => (
+                                                <div
+                                                    key={index}
+                                                    className="autocomplete-suggestion-item"
+                                                    onClick={() => selectTagSuggestion(tag)}
+                                                >
+                                                    {tag}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Buttons row */}
+                            <div className="button-row">
+                                <button className="add-button" onClick={() => setCurrentPage('stats')}>
+                                    Stats
+                                </button>
+                                <button className="add-button" onClick={addTask}>
+                                    Add Task
+                                </button>
+                            </div>
+
+                            <div className="flat-list-container">
+                                {tasks.length === 0 ? (
+                                    <p className="empty-list-text">No tasks yet. Add one!</p>
+                                ) : (
+                                    tasks.map((item) => (
+                                        <TaskItem
+                                            key={item.id}
+                                            task={item}
+                                            onDelete={deleteTask}
+                                            onStart={startTimer}
+                                            onPause={pauseTimer}
+                                            onStop={stopTimer}
+                                            onUpdateTime={updateTaskTime}
+                                        />
+                                    ))
+                                )}
+                            </div>
+                        </div>
+                    ) : (
+                        <StatsPage tasks={tasks} onBack={() => setCurrentPage('home')} />
+                    )}
+                </div>
+            );
+        };
+
+        // Render the App component into the 'root' div
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
